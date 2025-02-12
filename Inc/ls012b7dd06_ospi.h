@@ -12,6 +12,7 @@
 #include "ls012b7dd06_config.h"
 
 // OSPI
+extern OSPI_HandleTypeDef *hlcd_ospi;
 extern uint8_t lcd_tx_buf_1[OUT_DATA_BUF_SIZE];
 
 extern HAL_StatusTypeDef lcd_OSPI_set_cmd_config(void);

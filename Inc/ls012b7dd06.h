@@ -14,6 +14,17 @@
 #include "ls012b7dd06_ospi.h"
 #include "ls012b7dd06_tim.h"
 
-void lcd_init(OSPI_HandleTypeDef *hospi, TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim);
+void lcd_init(OSPI_HandleTypeDef *hospi,
+		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim,
+		GPIO_TypeDef *hintb_port, uint16_t intb_pin);
+
+void lcd_displayFrame( void );
+void lcd_cls( void );
+void lcd_setPixel( int16_t x, int16_t y, lcd_colour_t colour );
+void lcd_setColour( lcd_colour_t colour );
+void lcd_drawSquare( uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour );
+void lcd_drawHLine( uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour );
+void lcd_drawTestFigure( void );
+
 
 #endif /* LS012B7DD06_STM32_INC_LS012B7DD06_H_ */
