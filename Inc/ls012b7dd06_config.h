@@ -13,7 +13,7 @@
 // to avoid circular dependencies.
 //
 
-//#define LCD_USE_CUSTOM_CONFIG
+#define LCD_USE_CUSTOM_CONFIG
 
 //
 // Colours

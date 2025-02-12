@@ -7,7 +7,9 @@
 
 #include "ls012b7dd06.h"
 
-void lcd_init(void){
+void lcd_init(OSPI_HandleTypeDef *hospi){
+#ifndef LCD_USE_CUSTOM_CONFIG
 	lcd_GPDMA_init();
-	lcd_OSPI_init();
+#endif
+	lcd_OSPI_init(hospi);
 }

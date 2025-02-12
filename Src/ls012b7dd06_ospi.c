@@ -6,39 +6,48 @@
  */
 
 #include "ls012b7dd06_ospi.h"
+#include "tim.h"	// for the halfline timer from the main project (Core/Inc/tim.h)
+#include "octospi.h"
+#include <stdio.h>	// for sprintf()
 
-#ifndef LCD_USE_CUSTOM_CONFIG
-OSPI_HandleTypeDef hlcd_ospi;
-#endif
+OSPI_HandleTypeDef *hlcd_ospi;
 OSPI_RegularCmdTypeDef ospi_cmd;
 uint8_t lcd_tx_buf_1[OUT_DATA_BUF_SIZE] = {0};
 
-#ifdef LCD_USE_CUSTOM_CONFIG
-void lcd_OSPI_init(void){
-#else
-void lcd_OSPI_init(void){
-#endif
-	hlcd_ospi.Instance = OCTOSPI1;
-	  hlcd_ospi.Init.FifoThreshold = 1;
-	  hlcd_ospi.Init.DualQuad = HAL_OSPI_DUALQUAD_DISABLE;
-	  hlcd_ospi.Init.MemoryType = HAL_OSPI_MEMTYPE_MICRON;
-	  hlcd_ospi.Init.DeviceSize = 32;
-	  hlcd_ospi.Init.ChipSelectHighTime = 1;
-	  hlcd_ospi.Init.FreeRunningClock = HAL_OSPI_FREERUNCLK_DISABLE;
-	  hlcd_ospi.Init.ClockMode = HAL_OSPI_CLOCK_MODE_0;
-	  hlcd_ospi.Init.WrapSize = HAL_OSPI_WRAP_NOT_SUPPORTED;
-	  hlcd_ospi.Init.ClockPrescaler = 100;
-	  hlcd_ospi.Init.SampleShifting = HAL_OSPI_SAMPLE_SHIFTING_NONE;
-	  hlcd_ospi.Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_ENABLE;
-	  hlcd_ospi.Init.ChipSelectBoundary = 0;
-	  hlcd_ospi.Init.MaxTran = 0;
-	  hlcd_ospi.Init.Refresh = 0;
-	  if (HAL_OSPI_Init(&hlcd_ospi) != HAL_OK)
+void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi);
+
+//#ifdef LCD_USE_CUSTOM_CONFIG
+//void lcd_OSPI_init(void){
+//#else
+void lcd_OSPI_init(OSPI_HandleTypeDef *hospi){
+//#endif
+	if(hospi == NULL){
+	  hospi = hlcd_ospi;
+	  hospi->Instance = OCTOSPI1;
+	  hospi->Init.FifoThreshold = 1;
+	  hospi->Init.DualQuad = HAL_OSPI_DUALQUAD_DISABLE;
+	  hospi->Init.MemoryType = HAL_OSPI_MEMTYPE_MICRON;
+	  hospi->Init.DeviceSize = 32;
+	  hospi->Init.ChipSelectHighTime = 1;
+	  hospi->Init.FreeRunningClock = HAL_OSPI_FREERUNCLK_DISABLE;
+	  hospi->Init.ClockMode = HAL_OSPI_CLOCK_MODE_0;
+	  hospi->Init.WrapSize = HAL_OSPI_WRAP_NOT_SUPPORTED;
+	  hospi->Init.ClockPrescaler = 100;
+	  hospi->Init.SampleShifting = HAL_OSPI_SAMPLE_SHIFTING_NONE;
+	  hospi->Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_ENABLE;
+	  hospi->Init.ChipSelectBoundary = 0;
+	  hospi->Init.MaxTran = 0;
+	  hospi->Init.Refresh = 0;
+	  if (HAL_OSPI_Init(hospi) != HAL_OK)
 	  {
 	    Error_Handler();
 	  }
+	}
+	else {
+		hlcd_ospi = hospi;
+	}
 
-	HAL_OSPI_RegisterCallback(hlcd_ospi, HAL_OSPI_TX_CPLT_CB_ID, lcd_OSPI_TxCpltCallback);
+	HAL_OSPI_RegisterCallback(hospi, HAL_OSPI_TX_CPLT_CB_ID, lcd_OSPI_TxCpltCallback);
 
 	// In a single transmission,
 	  // first, an instruction (1<<BSP_PIN) is transmitted to send
@@ -232,8 +241,14 @@ void HAL_OSPI_MspDeInit(OSPI_HandleTypeDef* hospi)
 
 #endif
 
+// Used also in display_frame()
 HAL_StatusTypeDef lcd_OSPI_set_cmd_config(void){
-	return HAL_OSPI_Command( hospi, &ospi_cmd, 2047 );
+	return HAL_OSPI_Command( hlcd_ospi, &ospi_cmd, 2047 );
+}
+
+// Used also in display_frame()
+HAL_StatusTypeDef lcd_OSPI_transmit_halfline(uint32_t halfline_no){
+	return HAL_OSPI_Transmit_DMA( hlcd_ospi, (uint8_t*)lcd_tx_buf_1 + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
 }
 
 // can't move whole into the driver
@@ -256,15 +271,17 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 		ret = lcd_OSPI_set_cmd_config();
 
 		if( ret != HAL_OK ){
-			  sprintf( uart_msg_buf, "Error: HAL_OSPI_Command() status = %s, OSPI error code = 0x%08X\r\n",
+			  sprintf( uart_msg_buf, "Error: HAL_OSPI_Command() status = %s, OSPI error code = 0x%08lX\r\n",
 						hal_status_str[ret], hospi->ErrorCode );
 			  Error_Handler();
 		}
 
-		ret = HAL_OSPI_Transmit_DMA( hospi, (uint8_t*)lcd_tx_buf_1 + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
+		// Transmit next halfline
+//		ret = HAL_OSPI_Transmit_DMA( hospi, (uint8_t*)lcd_tx_buf_1 + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
+		ret = lcd_OSPI_transmit_halfline(halfline_no);
 
 		if( ret != HAL_OK ){
-			sprintf( uart_msg_buf, "Error: HAL_OSPI_Transmit_DMA status = %s, ospi error code = 0x%08X\r\n",
+			sprintf( uart_msg_buf, "Error: HAL_OSPI_Transmit_DMA status = %s, ospi error code = 0x%08lX\r\n",
 			hal_status_str[ret], hospi->ErrorCode );
 			Error_Handler();
 		}
