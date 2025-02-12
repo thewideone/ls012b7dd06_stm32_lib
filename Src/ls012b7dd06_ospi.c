@@ -6,7 +6,8 @@
  */
 
 #include "ls012b7dd06_ospi.h"
-#include "tim.h"	// for the halfline timer from the main project (Core/Inc/tim.h)
+//#include "tim.h"	// for the halfline timer from the main project (Core/Inc/tim.h)
+#include "ls012b7dd06_tim.h"
 #include "octospi.h"
 #include <stdio.h>	// for sprintf()
 
@@ -295,8 +296,8 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 		halfline_no = 1;
 //		HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_6 );
 		// Clear TIM15 CC1 IF
-		__HAL_TIM_CLEAR_FLAG(&htim15, TIM_FLAG_CC1);
-		__HAL_TIM_ENABLE_IT(&htim15, TIM_IT_CC1);
+		__HAL_TIM_CLEAR_FLAG(hlcd_tim_halfline, TIM_FLAG_CC1);
+		__HAL_TIM_ENABLE_IT(hlcd_tim_halfline, TIM_IT_CC1);
 //		HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_6 );
 	}
 

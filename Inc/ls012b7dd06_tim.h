@@ -13,10 +13,13 @@
 
 extern TIM_HandleTypeDef *hlcd_tim_halfline; 	// for halflines
 extern TIM_HandleTypeDef *hlcd_tim_delay;		// for us delays
-extern TIM_HandleTypeDef *hlcd_tim_adv;		// for GSP
+extern TIM_HandleTypeDef *hlcd_tim_adv;			// for GSP
+extern TIM_HandleTypeDef *hlcd_tim_pwr;			// for VA, VB and VCOM
 
-HAL_StatusTypeDef lcd_TIM_init(TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim);
+HAL_StatusTypeDef lcd_TIM_init(TIM_HandleTypeDef *htim_halfline, TIM_HandleTypeDef *htim_delay,
+								TIM_HandleTypeDef *htim_adv, TIM_HandleTypeDef *htim_pwr);
 HAL_StatusTypeDef lcd_PWM_power_enable(void);
 HAL_StatusTypeDef lcd_PWM_power_disable(void);
+void lcd_TIM_prepare(void);
 
 #endif /* LS012B7DD06_STM32_INC_LS012B7DD06_TIM_H_ */

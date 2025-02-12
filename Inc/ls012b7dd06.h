@@ -15,7 +15,8 @@
 #include "ls012b7dd06_tim.h"
 
 void lcd_init(OSPI_HandleTypeDef *hospi,
-		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim,
+		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim,
+		TIM_HandleTypeDef *hadv_tim, TIM_HandleTypeDef *htim_pwr,
 		GPIO_TypeDef *hintb_port, uint16_t intb_pin);
 
 void lcd_displayFrame( void );

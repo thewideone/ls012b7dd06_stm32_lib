@@ -13,7 +13,8 @@ GPIO_TypeDef *hlcd_intb_port;
 uint16_t lcd_intb_pin;
 
 void lcd_init(OSPI_HandleTypeDef *hospi,
-		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim,
+		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim,
+		TIM_HandleTypeDef *hadv_tim, TIM_HandleTypeDef *htim_pwr,
 		GPIO_TypeDef *hintb_port, uint16_t intb_pin){
 #ifndef LCD_USE_CUSTOM_CONFIG
 	lcd_GPDMA_init();
@@ -22,7 +23,7 @@ void lcd_init(OSPI_HandleTypeDef *hospi,
 	lcd_intb_pin = intb_pin;
 
 	lcd_OSPI_init(hospi);
-	lcd_TIM_init(hhalfline_tim, hdelay_tim, hadv_tim);
+	lcd_TIM_init(hhalfline_tim, hdelay_tim, hadv_tim, htim_pwr);
 }
 
 
@@ -52,7 +53,6 @@ void lcd_init(OSPI_HandleTypeDef *hospi,
 void lcd_displayFrame( void ){
 
 	HAL_StatusTypeDef ret = HAL_OK;
-	uint32_t tmp;
 
 //	  ret = HAL_OSPI_Command( &hospi1, &ospi_cmd, 2047 );
 	  ret = lcd_OSPI_set_cmd_config();
@@ -73,45 +73,11 @@ void lcd_displayFrame( void ){
 		  Error_Handler();
 	  }
 
-
-	htim15.Instance->CNT = 0;
-	htim1.Instance->CNT = 0;
-	htim15.Instance->SR = 0;	// clear interrupt flags causing unwanted callback calls
-	htim1.Instance->SR = 0;		// clear interrupt flags causing unwanted callback calls
-
-	__HAL_TIM_ENABLE_IT(&htim15, TIM_IT_CC1);		// enable TIM15 interrupt
-	__HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC1);		// enable TIM15 interrupt
-
-	  htim15.ChannelState[0] = (HAL_TIM_CHANNEL_STATE_BUSY);
-	  htim15.ChannelState[1] = (HAL_TIM_CHANNEL_STATE_BUSY);
-
-	  // Source:
-	  // https://community.st.com/t5/stm32-mcus-products/reset-timer-output-compare-output-with-timer-in-one-pulse-mode/td-p/219631
-
-	  tmp = htim15.Instance->CCMR1;
-
-	  tmp &= ~TIM_CCMR1_OC2M_0;
-	  tmp &= ~TIM_CCMR1_OC2M_1;
-	  tmp |= TIM_CCMR1_OC2M_2;
-	  tmp &= ~TIM_CCMR1_OC2M_3;
-
-	  htim15.Instance->CCMR1 = tmp;
-
-	  tmp |= TIM_CCMR1_OC2M_0;
-	  tmp |= TIM_CCMR1_OC2M_1;
-	  tmp &= ~TIM_CCMR1_OC2M_2;
-	  tmp &= ~TIM_CCMR1_OC2M_3;
-
-	  htim15.Instance->CCMR1 = tmp;
-
-	  // It is being disabled
-	  // in HAL_TIM_PWM_PulseFinishedCallback()
-	  // to avoid redundant ISR calls
-	  __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_CC1);
+	  lcd_TIM_prepare();
 
 	  HAL_GPIO_WritePin( hlcd_intb_port, lcd_intb_pin, GPIO_PIN_SET );
 
-	  ret = HAL_TIM_Base_Start_IT(&htim6);
+	  ret = HAL_TIM_Base_Start_IT(hlcd_tim_delay);
 	  if( ret != HAL_OK ){
 		  sprintf( uart_msg_buf, "Error: HAL_TIM_Base_Start_IT(&htim6) status = %s\r\n",
 					hal_status_str[ret] );
