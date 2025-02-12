@@ -11,16 +11,17 @@
 #include "stm32u5xx_hal.h"
 #include "ls012b7dd06_config.h"
 
-//#ifdef LCD_USE_CUSTOM_CONFIG
-void lcd_OSPI_init(OSPI_HandleTypeDef *hospi);
-//#else
-//void lcd_OSPI_init(void);
-//#endif
-
+// OSPI
 extern uint8_t lcd_tx_buf_1[OUT_DATA_BUF_SIZE];
+
 extern HAL_StatusTypeDef lcd_OSPI_set_cmd_config(void);
 extern HAL_StatusTypeDef lcd_OSPI_transmit_halfline(uint32_t halfline_no);
 
+HAL_StatusTypeDef lcd_OSPI_init(OSPI_HandleTypeDef *hospi);
+
 //__weak void lcd_ospi_error_handler();
+
+// Timers
+// ...
 
 #endif /* LS012B7DD06_STM32_INC_LS012B7DD06_OSPI_H_ */

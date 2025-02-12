@@ -19,7 +19,7 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi);
 //#ifdef LCD_USE_CUSTOM_CONFIG
 //void lcd_OSPI_init(void){
 //#else
-void lcd_OSPI_init(OSPI_HandleTypeDef *hospi){
+HAL_StatusTypeDef lcd_OSPI_init(OSPI_HandleTypeDef *hospi){
 //#endif
 	if(hospi == NULL){
 	  hospi = hlcd_ospi;
@@ -47,7 +47,7 @@ void lcd_OSPI_init(OSPI_HandleTypeDef *hospi){
 		hlcd_ospi = hospi;
 	}
 
-	HAL_OSPI_RegisterCallback(hospi, HAL_OSPI_TX_CPLT_CB_ID, lcd_OSPI_TxCpltCallback);
+	HAL_StatusTypeDef ret = HAL_OSPI_RegisterCallback(hospi, HAL_OSPI_TX_CPLT_CB_ID, lcd_OSPI_TxCpltCallback);
 
 	// In a single transmission,
 	  // first, an instruction (1<<BSP_PIN) is transmitted to send
@@ -72,6 +72,8 @@ void lcd_OSPI_init(OSPI_HandleTypeDef *hospi){
 	  ospi_cmd.DummyCycles = 0; // 0-31
 	  ospi_cmd.DQSMode = HAL_OSPI_DQS_DISABLE;
 	  ospi_cmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;	// send BSP on every transmission
+
+	  return ret;
 }
 
 #ifndef LCD_USE_CUSTOM_CONFIG

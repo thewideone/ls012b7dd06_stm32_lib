@@ -14,6 +14,6 @@
 #include "ls012b7dd06_ospi.h"
 #include "ls012b7dd06_tim.h"
 
-void lcd_init(OSPI_HandleTypeDef *hospi);
+void lcd_init(OSPI_HandleTypeDef *hospi, TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim, TIM_HandleTypeDef *hadv_tim);
 
 #endif /* LS012B7DD06_STM32_INC_LS012B7DD06_H_ */
