@@ -7,7 +7,8 @@
 
 #include "ls012b7dd06.h"
 #include <stdio.h>	// for sprintf()
-#include "tim.h"	// temp: for timers
+//#include "tim.h"	// temp: for timers
+#include "main.h"	// for uart_msg_buf
 
 GPIO_TypeDef *hlcd_intb_port;
 uint16_t lcd_intb_pin;
@@ -54,7 +55,6 @@ void lcd_displayFrame( void ){
 
 	HAL_StatusTypeDef ret = HAL_OK;
 
-//	  ret = HAL_OSPI_Command( &hospi1, &ospi_cmd, 2047 );
 	  ret = lcd_OSPI_set_cmd_config();
 
 	  if( ret != HAL_OK ){
@@ -64,7 +64,6 @@ void lcd_displayFrame( void ){
 	  }
 
 	  // Transmit the first halfline
-//	  ret = HAL_OSPI_Transmit_DMA( &hospi1, lcd_tx_buf_1 );
 	  ret = lcd_OSPI_transmit_halfline(0);
 
 	  if( ret != HAL_OK ){
@@ -73,8 +72,11 @@ void lcd_displayFrame( void ){
 		  Error_Handler();
 	  }
 
+	  // Prepare timers
 	  lcd_TIM_prepare();
 
+	  // Set INTB signal,
+	  // it will be reset in a timer callback function
 	  HAL_GPIO_WritePin( hlcd_intb_port, lcd_intb_pin, GPIO_PIN_SET );
 
 	  ret = HAL_TIM_Base_Start_IT(hlcd_tim_delay);
@@ -83,7 +85,7 @@ void lcd_displayFrame( void ){
 					hal_status_str[ret] );
 		  Error_Handler();
 	  }
-	  // TIM1 is started in TIM6's interrupt
+	  // hlcd_tim_adv is started in hlcd_tim_delay's interrupt
 }
 
 void lcd_cls( void ) {
