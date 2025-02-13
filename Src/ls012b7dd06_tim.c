@@ -59,9 +59,9 @@ void lcd_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			HAL_TIM_Base_Stop_IT(hlcd_tim_delay);
 			rem_matches = 2;	// reset the counter
 
-			htim15.Instance->CCER |= TIM_CCER_CC1E_Msk;		// (1) enable CC1
-		  htim15.Instance->CCER |= TIM_CCER_CC2E_Msk;		// (1) enable CC2
-		  htim15.Instance->BDTR |= (TIM_BDTR_MOE);			// (2) master output enable
+			hlcd_tim_halfline->Instance->CCER |= TIM_CCER_CC1E_Msk;		// (1) enable CC1
+			hlcd_tim_halfline->Instance->CCER |= TIM_CCER_CC2E_Msk;		// (1) enable CC2
+			hlcd_tim_halfline->Instance->BDTR |= (TIM_BDTR_MOE);		// (2) master output enable
 
 
 			HAL_TIM_PWM_Start( hlcd_tim_adv, TIM_CHANNEL_2 );
@@ -171,12 +171,12 @@ void lcd_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim){
 						 Error_Handler();
 					  }
 
-					  htim15.Instance->CNT = 0;
-					  htim15.Instance->SR = 0;		// clear interrupt flags causing unwanted callback calls
+					  hlcd_tim_halfline->Instance->CNT = 0;
+					  hlcd_tim_halfline->Instance->SR = 0;		// clear interrupt flags causing unwanted callback calls
 					//  htim15.Instance->EGR |= TIM_EGR_UG_Msk;	// set the UG bit in the EGR register to force the update generation event once the timer is enabled
 
-					  htim1.Instance->CNT = 0;
-					  htim1.Instance->SR = 0;		// clear interrupt flags causing unwanted callback calls
+					  hlcd_tim_adv->Instance->CNT = 0;
+					  hlcd_tim_adv->Instance->SR = 0;		// clear interrupt flags causing unwanted callback calls
 
 					  __HAL_TIM_ENABLE_IT(hlcd_tim_halfline, TIM_IT_CC1);		// enable TIM15 interrupt
 				}
