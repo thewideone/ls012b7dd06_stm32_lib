@@ -13,6 +13,7 @@
 // to avoid circular dependencies.
 //
 
+#define LCD_INSTANCES_CNT 1	// number of display instances
 #define LCD_USE_CUSTOM_CONFIG
 
 //
