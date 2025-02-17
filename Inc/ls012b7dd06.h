@@ -47,16 +47,18 @@ typedef struct {
 //		GPIO_TypeDef *hintb_port, uint16_t intb_pin);
 
 //void lcd_init(lcd_dev_t *dev);
-void lcd_init(uint8_t instance_no, lcd_init_t* init);
-void lcd_setActive(uint8_t instance_no);
+void LCD_init(uint8_t instance_no, lcd_init_t* init);
+HAL_StatusTypeDef LCD_PWM_power_enable(void);
+HAL_StatusTypeDef LCD_PWM_power_disable(void);
+void LCD_setActive(uint8_t instance_no);
 
-void lcd_displayFrame( void );
-void lcd_cls( void );
-void lcd_setPixel( int16_t x, int16_t y, lcd_colour_t colour );
-void lcd_setColour( lcd_colour_t colour );
-void lcd_drawSquare( uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour );
-void lcd_drawHLine( uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour );
-void lcd_drawTestFigure( void );
+void LCD_displayFrame( void );
+void LCD_cls( void );
+void LCD_setPixel( int16_t x, int16_t y, lcd_colour_t colour );
+void LCD_setColour( lcd_colour_t colour );
+void LCD_drawSquare( uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour );
+void LCD_drawHLine( uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour );
+void LCD_drawTestFigure( void );
 
 
 #endif /* LS012B7DD06_STM32_INC_LS012B7DD06_H_ */

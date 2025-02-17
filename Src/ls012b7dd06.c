@@ -12,19 +12,19 @@
 lcd_ctx_t lcd_ctx[LCD_INSTANCES_CNT] = {0};
 uint8_t lcd_active_instance_no = 0;
 
-void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi);
-void lcd_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-void lcd_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim);
-void lcd_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim);
+void LCD_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi);
+void LCD_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void LCD_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim);
+void LCD_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim);
 
-void lcd_init(uint8_t instance_no, lcd_init_t *init){
+void LCD_init(uint8_t instance_no, lcd_init_t *init){
 //void lcd_init(lcd_dev_t *dev){
 //void lcd_init(OSPI_HandleTypeDef *hospi,
 //		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim,
 //		TIM_HandleTypeDef *hadv_tim, TIM_HandleTypeDef *htim_pwr,
 //		GPIO_TypeDef *hintb_port, uint16_t intb_pin){
 #ifndef LCD_USE_CUSTOM_CONFIG
-	lcd_GPDMA_init();
+	LCD_GPDMA_init();
 #endif
 //	hlcd_intb_port = hintb_port;
 //	lcd_intb_pin = intb_pin;
@@ -46,7 +46,7 @@ void lcd_init(uint8_t instance_no, lcd_init_t *init){
 //	lcd_intb_pin = intb_pin;
 
 //	lcd_OSPI_init(hospi);
-	HAL_StatusTypeDef ret = HAL_OSPI_RegisterCallback(lcd_ctx[instance_no].hospi, HAL_OSPI_TX_CPLT_CB_ID, lcd_OSPI_TxCpltCallback);
+	HAL_StatusTypeDef ret = HAL_OSPI_RegisterCallback(lcd_ctx[instance_no].hospi, HAL_OSPI_TX_CPLT_CB_ID, LCD_OSPI_TxCpltCallback);
 
 	// In a single transmission,
 	  // first, an instruction (1<<BSP_PIN) is transmitted to send
@@ -87,21 +87,21 @@ void lcd_init(uint8_t instance_no, lcd_init_t *init){
 
 //	HAL_StatusTypeDef ret;
 
-	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hdelay_tim, HAL_TIM_PERIOD_ELAPSED_CB_ID, lcd_TIM_PeriodElapsedCallback);
+	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hdelay_tim, HAL_TIM_PERIOD_ELAPSED_CB_ID, LCD_TIM_PeriodElapsedCallback);
 	if( ret != HAL_OK ){
 		sprintf( uart_msg_buf, "Error: lcd_init(): HAL_TIM_RegisterCallback(hdelay_tim) status = %s\r\n",
 				hal_status_str[ret] );
 	  Error_Handler();
 	}
 
-	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hadv_tim, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, lcd_TIM_PWM_PulseFinishedCallback_GSP);
+	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hadv_tim, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, LCD_TIM_PWM_PulseFinishedCallback_GSP);
 	if( ret != HAL_OK ){
 		sprintf( uart_msg_buf, "Error: lcd_init(): HAL_TIM_RegisterCallback(hadv_tim) status = %s\r\n",
 				hal_status_str[ret] );
 	  Error_Handler();
 	}
 
-	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hhalfline_tim, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, lcd_TIM_PWM_PulseFinishedCallback_halfline);
+	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hhalfline_tim, HAL_TIM_PWM_PULSE_FINISHED_CB_ID, LCD_TIM_PWM_PulseFinishedCallback_halfline);
 	if( ret != HAL_OK ){
 		sprintf( uart_msg_buf, "Error: lcd_init(): HAL_TIM_RegisterCallback(hhalfline_tim) status = %s\r\n",
 					hal_status_str[ret] );
@@ -109,7 +109,7 @@ void lcd_init(uint8_t instance_no, lcd_init_t *init){
 	}
 }
 
-void lcd_setActive(uint8_t instance_no){
+void LCD_setActive(uint8_t instance_no){
 	// TODO: check if possible
 	// and stop currently active instance if necessary
 
@@ -127,12 +127,12 @@ void lcd_setActive(uint8_t instance_no){
 //
 
 // Used also in display_frame()
-HAL_StatusTypeDef lcd_OSPI_set_cmd_config(void){
+HAL_StatusTypeDef LCD_OSPI_set_cmd_config(void){
 	return HAL_OSPI_Command( lcd_ctx[lcd_active_instance_no].hospi, &(lcd_ctx[lcd_active_instance_no].ospi_cmd), 2047 );
 }
 
 // Used also in display_frame()
-HAL_StatusTypeDef lcd_OSPI_transmit_halfline(uint32_t halfline_no){
+HAL_StatusTypeDef LCD_OSPI_transmit_halfline(uint32_t halfline_no){
 	return HAL_OSPI_Transmit_DMA( lcd_ctx[lcd_active_instance_no].hospi, (uint8_t*)(lcd_ctx[lcd_active_instance_no].buf1) + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
 }
 
@@ -140,7 +140,7 @@ HAL_StatusTypeDef lcd_OSPI_transmit_halfline(uint32_t halfline_no){
 // because callbacks can be executed for multiple e.g. timers
 // use user callbacks instead!
 //void HAL_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
-void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
+void LCD_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 //	HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_6 );
 //	sprintf( uart_msg_buf, "OSPI1 tx complete. lcd_ctx[lcd_active_instance_no].hospi->State = 0x%08X. Transmitting next...\r\n",
 //						lcd_ctx[lcd_active_instance_no].hospi.State );
@@ -153,7 +153,7 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 
 	if( halfline_no < 480 ) {
 //		HAL_GPIO_TogglePin( GPIOB, GPIO_PIN_6 );
-		ret = lcd_OSPI_set_cmd_config();
+		ret = LCD_OSPI_set_cmd_config();
 
 		if( ret != HAL_OK ){
 			  sprintf( uart_msg_buf, "Error: lcd_OSPI_TxCpltCallback(): lcd_OSPI_set_cmd_config() status = %s, OSPI error code = 0x%08lX\r\n",
@@ -163,7 +163,7 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 
 		// Transmit next halfline
 //		ret = HAL_OSPI_Transmit_DMA( hospi, (uint8_t*)lcd_tx_buf_1 + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
-		ret = lcd_OSPI_transmit_halfline(halfline_no);
+		ret = LCD_OSPI_transmit_halfline(halfline_no);
 
 		if( ret != HAL_OK ){
 			sprintf( uart_msg_buf, "Error: lcd_OSPI_TxCpltCallback(): lcd_OSPI_transmit_halfline(halfline_no) status = %s, ospi error code = 0x%08lX\r\n",
@@ -196,7 +196,7 @@ void lcd_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 // Timers functions
 //
 
-void lcd_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+void LCD_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 //void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if( htim == lcd_ctx[lcd_active_instance_no].hdelay_tim ) {
 		static uint8_t rem_matches = 2;
@@ -225,7 +225,7 @@ void lcd_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 }
 
-void lcd_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim){
+void LCD_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim){
 //void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
 	if( htim == lcd_ctx[lcd_active_instance_no].hadv_tim ) {
 		if( htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1 ) {
@@ -243,7 +243,7 @@ void lcd_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim){
 		}
 	}
 }
-void lcd_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim){
+void LCD_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim){
 	if( htim == lcd_ctx[lcd_active_instance_no].hhalfline_tim ){
 		if( htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1 ) {
 			static uint32_t remaining_halflines = 4;
@@ -334,7 +334,7 @@ void lcd_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim){
 }
 
 // Start VA, and VB and VCOM signals
-HAL_StatusTypeDef lcd_PWM_power_enable(void){
+HAL_StatusTypeDef LCD_PWM_power_enable(void){
 	HAL_StatusTypeDef ret = HAL_TIM_PWM_Start_IT(lcd_ctx[lcd_active_instance_no].hpwr_tim, TIM_CHANNEL_1);
 	if ( ret != HAL_OK){
 		sprintf( uart_msg_buf, "Error: lcd_PWM_power_enable(): HAL_TIM_PWM_Start_IT(hpwr_tim) status = %s\r\n",
@@ -353,7 +353,7 @@ HAL_StatusTypeDef lcd_PWM_power_enable(void){
 }
 
 // Stop VA, and VB and VCOM signals
-HAL_StatusTypeDef lcd_PWM_power_disable(void){
+HAL_StatusTypeDef LCD_PWM_power_disable(void){
 	HAL_StatusTypeDef ret = HAL_TIM_PWM_Stop_IT(lcd_ctx[lcd_active_instance_no].hpwr_tim, TIM_CHANNEL_1);
 	if ( ret != HAL_OK){
 		sprintf( uart_msg_buf, "Error: lcd_PWM_power_disable(): HAL_TIM_PWM_Stop_IT(hpwr_tim) status = %s\r\n",
@@ -371,7 +371,7 @@ HAL_StatusTypeDef lcd_PWM_power_disable(void){
 	return HAL_OK;
 }
 
-void lcd_TIM_prepare(void) {
+void LCD_TIM_prepare(void) {
 	lcd_ctx[lcd_active_instance_no].hhalfline_tim->Instance->CNT = 0;	// reset counter
 	lcd_ctx[lcd_active_instance_no].hadv_tim->Instance->CNT = 0;		// reset counter
 	lcd_ctx[lcd_active_instance_no].hhalfline_tim->Instance->SR = 0;	// clear interrupt flags causing unwanted callback calls
@@ -440,11 +440,11 @@ void lcd_TIM_prepare(void) {
 // Initial empty GCK high state is forced by CCMR1 register of TIM15.
 // Width of this state is controlled by TIM1's CH3 pulse value.
 //
-void lcd_displayFrame( void ){
+void LCD_displayFrame( void ){
 
 	HAL_StatusTypeDef ret = HAL_OK;
 
-	  ret = lcd_OSPI_set_cmd_config();
+	  ret = LCD_OSPI_set_cmd_config();
 
 	  if( ret != HAL_OK ){
 	  	  sprintf( uart_msg_buf, "Error: lcd_displayFrame(): lcd_OSPI_set_cmd_config() status = %s, OSPI error code = 0x%08lX\r\n",
@@ -453,7 +453,7 @@ void lcd_displayFrame( void ){
 	  }
 
 	  // Transmit the first halfline
-	  ret = lcd_OSPI_transmit_halfline(0);
+	  ret = LCD_OSPI_transmit_halfline(0);
 
 	  if( ret != HAL_OK ){
 		  sprintf( uart_msg_buf, "Error: lcd_displayFrame(): lcd_OSPI_transmit_halfline(0) status = %s, ospi error code = 0x%08lX\r\n",
@@ -462,7 +462,7 @@ void lcd_displayFrame( void ){
 	  }
 
 	  // Prepare timers
-	  lcd_TIM_prepare();
+	  LCD_TIM_prepare();
 
 	  // Set INTB signal,
 	  // it will be reset in a timer callback function
@@ -477,12 +477,12 @@ void lcd_displayFrame( void ){
 	  // lcd_ctx[lcd_active_instance_no].hadv_tim is started in lcd_ctx[lcd_active_instance_no].hdelay_tim's interrupt
 }
 
-void lcd_cls( void ) {
+void LCD_cls( void ) {
 	for( uint32_t i = 0; i < OUT_DATA_BUF_SIZE-1-2; i++)
 		lcd_ctx[lcd_active_instance_no].buf1[i] = 0x00;
 }
 
-void lcd_setPixel( int16_t x, int16_t y, lcd_colour_t colour ) {
+void LCD_setPixel( int16_t x, int16_t y, lcd_colour_t colour ) {
 	// Check coordinates against display bounds
 	if( x < 0 || y < 0 || x > RLCD_DISP_W || y > RLCD_DISP_H )
 		return;
@@ -581,7 +581,7 @@ void lcd_setPixel( int16_t x, int16_t y, lcd_colour_t colour ) {
 // - skip dummy pixels (their count for each line
 //   is in the display's datasheet)
 //
-void lcd_setColour( lcd_colour_t colour ) {
+void LCD_setColour( lcd_colour_t colour ) {
 	for( uint16_t line_no = 0; line_no < RLCD_DISP_H; line_no++ ) {
 		// Fill MSB:
 
@@ -624,39 +624,39 @@ void lcd_setColour( lcd_colour_t colour ) {
 }
 
 
-void lcd_drawSquare( uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour ) {
+void LCD_drawSquare( uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour ) {
 	for( uint16_t x = x0; x < x1; x++ ) {
-		lcd_setPixel( x, y0, colour );
-		lcd_setPixel( x, y1, colour );
+		LCD_setPixel( x, y0, colour );
+		LCD_setPixel( x, y1, colour );
 	}
 
 	for( uint16_t y = y0; y < y1; y++ ) {
-		lcd_setPixel( x0, y, colour );
-		lcd_setPixel( x1, y, colour );
+		LCD_setPixel( x0, y, colour );
+		LCD_setPixel( x1, y, colour );
 	}
 }
 
-void lcd_drawHLine( uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour ) {
+void LCD_drawHLine( uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour ) {
 	for( uint16_t x = x0; x < x1; x++ )
-		lcd_setPixel( x, y, colour );
+		LCD_setPixel( x, y, colour );
 }
 
-void lcd_drawTestFigure( void ) {
+void LCD_drawTestFigure( void ) {
 	lcd_colour_t colour;
 
-	colour.val = COLOUR_YELLOW;
-	lcd_setColour( colour );
+	colour.val = COLOUR_WHITE;
+	LCD_setColour( colour );
 
 	colour.val = COLOUR_RED;
-	lcd_drawSquare( 60, 60, 100, 100, colour );
+	LCD_drawSquare( 60, 60, 100, 100, colour );
 
 	colour.val = COLOUR_GREEN;
-	lcd_drawSquare( 120, 60, 160, 100, colour );
+	LCD_drawSquare( 120, 60, 160, 100, colour );
 
 
 	colour.val = COLOUR_BLUE;
-	lcd_drawSquare( 60, 120, 100, 160, colour );
+	LCD_drawSquare( 60, 120, 100, 160, colour );
 
-	colour.val = COLOUR_WHITE;
-	lcd_drawSquare( 120, 120, 160, 160, colour );
+	colour.val = COLOUR_YELLOW;
+	LCD_drawSquare( 120, 120, 160, 160, colour );
 }
