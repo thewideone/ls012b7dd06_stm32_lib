@@ -38,12 +38,6 @@ typedef struct {
 	uint8_t *buf1;
 } lcd_ctx_t;
 
-//void lcd_init(OSPI_HandleTypeDef *hospi,
-//		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim,
-//		TIM_HandleTypeDef *hadv_tim, TIM_HandleTypeDef *htim_pwr,
-//		GPIO_TypeDef *hintb_port, uint16_t intb_pin);
-
-//void lcd_init(lcd_dev_t *dev);
 void LCD_init(uint8_t instance_no, lcd_init_t* init);
 HAL_StatusTypeDef LCD_PWM_power_enable(void);
 HAL_StatusTypeDef LCD_PWM_power_disable(void);

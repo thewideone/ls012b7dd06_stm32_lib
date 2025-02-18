@@ -18,19 +18,6 @@ void LCD_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim);
 void LCD_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim);
 
 void LCD_init(uint8_t instance_no, lcd_init_t *init){
-//void lcd_init(lcd_dev_t *dev){
-//void lcd_init(OSPI_HandleTypeDef *hospi,
-//		TIM_HandleTypeDef *hhalfline_tim, TIM_HandleTypeDef *hdelay_tim,
-//		TIM_HandleTypeDef *hadv_tim, TIM_HandleTypeDef *htim_pwr,
-//		GPIO_TypeDef *hintb_port, uint16_t intb_pin){
-#ifndef LCD_USE_CUSTOM_CONFIG
-	LCD_GPDMA_init();
-#endif
-//	hlcd_intb_port = hintb_port;
-//	lcd_intb_pin = intb_pin;
-//
-//	lcd_OSPI_init(hospi);
-//	lcd_TIM_init(hhalfline_tim, hdelay_tim, hadv_tim, htim_pwr);
 	lcd_ctx[instance_no].hospi 			= init->hospi;
 	lcd_ctx[instance_no].hhalfline_tim 	= init->hhalfline_tim;
 	lcd_ctx[instance_no].hdelay_tim 	= init->hdelay_tim;
@@ -42,10 +29,6 @@ void LCD_init(uint8_t instance_no, lcd_init_t *init){
 	lcd_ctx[instance_no].active 		= false;
 	lcd_ctx[instance_no].buf1 			= init->buf1;
 
-//	hlcd_intb_port = hintb_port;
-//	lcd_intb_pin = intb_pin;
-
-//	lcd_OSPI_init(hospi);
 	HAL_StatusTypeDef ret = HAL_OSPI_RegisterCallback(lcd_ctx[instance_no].hospi, HAL_OSPI_TX_CPLT_CB_ID, LCD_OSPI_TxCpltCallback);
 
 	// In a single transmission,
@@ -72,20 +55,11 @@ void LCD_init(uint8_t instance_no, lcd_init_t *init){
 	lcd_ctx[instance_no].ospi_cmd.DQSMode = HAL_OSPI_DQS_DISABLE;
 	lcd_ctx[instance_no].ospi_cmd.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;	// send BSP on every transmission
 
-
-//	lcd_TIM_init(hhalfline_tim, hdelay_tim, hadv_tim, htim_pwr);
 	if (init->hospi == NULL || init->hhalfline_tim == NULL || init->hdelay_tim == NULL || init->hadv_tim == NULL || init->hpwr_tim == NULL) {
 		sprintf( uart_msg_buf, "Error: lcd_init(): at least one handle is null\r\n");
 //		return HAL_ERROR;
 		Error_Handler();
 	}
-
-//	hlcd_tim_halfline = htim_halfline;
-//	hlcd_tim_delay = htim_delay;
-//	hlcd_tim_adv = htim_adv;
-//	hlcd_tim_pwr = htim_pwr;
-
-//	HAL_StatusTypeDef ret;
 
 	ret = HAL_TIM_RegisterCallback(lcd_ctx[instance_no].hdelay_tim, HAL_TIM_PERIOD_ELAPSED_CB_ID, LCD_TIM_PeriodElapsedCallback);
 	if( ret != HAL_OK ){
@@ -136,8 +110,7 @@ HAL_StatusTypeDef LCD_OSPI_transmit_halfline(uint32_t halfline_no){
 	return HAL_OSPI_Transmit_DMA( lcd_ctx[lcd_active_instance_no].hospi, (uint8_t*)(lcd_ctx[lcd_active_instance_no].buf1) + sizeof(lcd_colour_t)*OUT_DATA_BUF_LINE_W*halfline_no );
 }
 
-// can't move whole into the driver
-// because callbacks can be executed for multiple e.g. timers
+// callbacks can be executed for multiple e.g. timers
 // use user callbacks instead!
 //void HAL_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 void LCD_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
@@ -197,7 +170,6 @@ void LCD_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hospi){
 //
 
 void LCD_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if( htim == lcd_ctx[lcd_active_instance_no].hdelay_tim ) {
 		static uint8_t rem_matches = 2;
 
@@ -226,7 +198,6 @@ void LCD_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 }
 
 void LCD_TIM_PWM_PulseFinishedCallback_GSP(TIM_HandleTypeDef *htim){
-//void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
 	if( htim == lcd_ctx[lcd_active_instance_no].hadv_tim ) {
 		if( htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1 ) {
 			static uint8_t rem_periods = 1;
@@ -576,11 +547,6 @@ void LCD_setPixel( int16_t x, int16_t y, lcd_colour_t colour ) {
 	lcd_ctx[lcd_active_instance_no].buf1[ target_idx ] = byte_value;
 }
 
-//
-// TODO:
-// - skip dummy pixels (their count for each line
-//   is in the display's datasheet)
-//
 void LCD_setColour( lcd_colour_t colour ) {
 	for( uint16_t line_no = 0; line_no < RLCD_DISP_H; line_no++ ) {
 		// Fill MSB:
