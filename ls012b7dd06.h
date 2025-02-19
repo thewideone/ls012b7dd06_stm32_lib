@@ -35,6 +35,7 @@ typedef struct {
 	GPIO_TypeDef *hintb_port;
 	uint16_t intb_pin;
 	bool active;
+	bool busy;
 	uint8_t *buf1;
 } lcd_ctx_t;
 
@@ -43,7 +44,7 @@ HAL_StatusTypeDef LCD_PWM_power_enable(void);
 HAL_StatusTypeDef LCD_PWM_power_disable(void);
 void LCD_setActive(uint8_t instance_no);
 
-void LCD_displayFrame(void);
+HAL_StatusTypeDef LCD_displayFrame(void);
 void LCD_cls(void);
 void LCD_setPixel(int16_t x, int16_t y, lcd_colour_t colour);
 void LCD_setColour(lcd_colour_t colour);

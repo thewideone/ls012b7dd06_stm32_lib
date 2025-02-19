@@ -27,6 +27,7 @@ void LCD_init(uint8_t instance_no, lcd_init_t *init) {
 
 	lcd_ctx[instance_no].intb_pin = init->intb_pin;
 	lcd_ctx[instance_no].active = false;
+	lcd_ctx[instance_no].busy = false;
 	lcd_ctx[instance_no].buf1 = init->buf1;
 
 	HAL_StatusTypeDef ret = HAL_OSPI_RegisterCallback(
@@ -44,18 +45,14 @@ void LCD_init(uint8_t instance_no, lcd_init_t *init) {
 
 	lcd_ctx[instance_no].ospi_cmd.OperationType = HAL_OSPI_OPTYPE_COMMON_CFG;
 	lcd_ctx[instance_no].ospi_cmd.Instruction = (1 << 6);//(1 << LCD_BSP_Pin);//0x20;			// send the BSP signal pulse
-	lcd_ctx[instance_no].ospi_cmd.InstructionMode =
-	HAL_OSPI_INSTRUCTION_8_LINES;	// 8-line parallel output
-	lcd_ctx[instance_no].ospi_cmd.InstructionDtrMode =
-	HAL_OSPI_INSTRUCTION_DTR_DISABLE;// transmit the BSP signal on only one edge of the clock
+	lcd_ctx[instance_no].ospi_cmd.InstructionMode = HAL_OSPI_INSTRUCTION_8_LINES;	// 8-line parallel output
+	lcd_ctx[instance_no].ospi_cmd.InstructionDtrMode = HAL_OSPI_INSTRUCTION_DTR_DISABLE;// transmit the BSP signal on only one edge of the clock
 	//		  .Address = 0x00,
 	//		  .AddressSize = HAL_OSPI_ADDRESS_8_BITS,
-	lcd_ctx[instance_no].ospi_cmd.AddressMode = HAL_OSPI_ADDRESS_NONE;// no address phase
-	lcd_ctx[instance_no].ospi_cmd.AlternateBytesMode =
-	HAL_OSPI_ALTERNATE_BYTES_NONE;
+	lcd_ctx[instance_no].ospi_cmd.AddressMode = HAL_OSPI_ADDRESS_NONE;	// no address phase
+	lcd_ctx[instance_no].ospi_cmd.AlternateBytesMode = HAL_OSPI_ALTERNATE_BYTES_NONE;
 	lcd_ctx[instance_no].ospi_cmd.DataMode = HAL_OSPI_DATA_8_LINES;	// 8-line parallel output
-	lcd_ctx[instance_no].ospi_cmd.NbData =
-			sizeof(uint8_t) * OUT_DATA_BUF_LINE_W; //OUT_DATA_BUF_SIZE, //18, // size of data to be transmitted, possible range: 1 - 0xFFFFFFFF (1-2^32)
+	lcd_ctx[instance_no].ospi_cmd.NbData = sizeof(uint8_t) * OUT_DATA_BUF_LINE_W; // size of data to be transmitted, possible range: 1 - 0xFFFFFFFF (1-2^32)
 	lcd_ctx[instance_no].ospi_cmd.DataDtrMode = HAL_OSPI_DATA_DTR_ENABLE; // transmit on both edges of the clock
 	lcd_ctx[instance_no].ospi_cmd.DummyCycles = 0; // 0-31
 	lcd_ctx[instance_no].ospi_cmd.DQSMode = HAL_OSPI_DQS_DISABLE;
@@ -277,7 +274,8 @@ void LCD_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim) {
 					HAL_GPIO_WritePin( LCD_INTB_GPIO_Port, LCD_INTB_Pin,
 							GPIO_PIN_RESET);
 
-					// Disable frame-transmitting hardware
+					// End of frame transmission,
+					// disable the frame-transmitting hardware
 					HAL_StatusTypeDef ret = HAL_OK;
 					ret = HAL_TIM_PWM_Stop(
 							lcd_ctx[lcd_active_instance_no].hadv_tim,
@@ -339,6 +337,8 @@ void LCD_TIM_PWM_PulseFinishedCallback_halfline(TIM_HandleTypeDef *htim) {
 					__HAL_TIM_ENABLE_IT(
 							lcd_ctx[lcd_active_instance_no].hhalfline_tim,
 							TIM_IT_CC1);		// enable TIM15 interrupt
+
+					lcd_ctx[lcd_active_instance_no].busy = false;
 				}
 			}
 
@@ -371,6 +371,9 @@ HAL_StatusTypeDef LCD_PWM_power_enable(void) {
 
 // Stop VA, and VB and VCOM signals
 HAL_StatusTypeDef LCD_PWM_power_disable(void) {
+	if (lcd_ctx[lcd_active_instance_no].busy)
+		return HAL_BUSY;
+
 	HAL_StatusTypeDef ret;
 
 	ret = HAL_TIM_PWM_Stop_IT(lcd_ctx[lcd_active_instance_no].hpwr_tim, TIM_CHANNEL_1);
@@ -461,7 +464,11 @@ void LCD_TIM_prepare(void) {
 // Initial empty GCK high state is forced by CCMR1 register of TIM15.
 // Width of this state is controlled by TIM1's CH3 pulse value.
 //
-void LCD_displayFrame(void) {
+HAL_StatusTypeDef LCD_displayFrame(void) {
+	if (lcd_ctx[lcd_active_instance_no].busy)
+		return HAL_BUSY;
+
+	lcd_ctx[lcd_active_instance_no].busy = true;
 
 	HAL_StatusTypeDef ret = HAL_OK;
 
