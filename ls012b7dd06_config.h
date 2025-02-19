@@ -1,12 +1,12 @@
 /*
- * lcd_config.h
+ * ls012b7dd06_config.h
  *
  *  Created on: Jul 24, 2024
- *      Author: szyme
+ *      Author: thewideone
  */
 
-#ifndef LS012B7DD06_STM32_INC_LS012B7DD06_CONFIG_H_
-#define LS012B7DD06_STM32_INC_LS012B7DD06_CONFIG_H_
+#ifndef _LS012B7DD06_CONFIG_H_
+#define _LS012B7DD06_CONFIG_H_
 
 //
 // This file contains only definitions and structures
@@ -14,7 +14,7 @@
 //
 
 #define LCD_INSTANCES_CNT 1	// number of display instances
-#define LCD_USE_CUSTOM_CONFIG
+//#define LCD_USE_CUSTOM_CONFIG // functionality to be added
 
 //
 // Colours
@@ -102,4 +102,4 @@ typedef union {
 // Maximum number of characters in a single string
 #define RLCD_STR_MAX_CHAR_CNT ( RLCD_DISP_W / 5 )
 
-#endif /* LS012B7DD06_STM32_INC_LS012B7DD06_CONFIG_H_ */
+#endif /* _LS012B7DD06_CONFIG_H_ */
