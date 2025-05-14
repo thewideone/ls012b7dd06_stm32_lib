@@ -50,6 +50,7 @@ void LCD_setPixel(int16_t x, int16_t y, lcd_colour_t colour);
 void LCD_setColour(lcd_colour_t colour);
 void LCD_drawSquare(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, lcd_colour_t colour);
 void LCD_drawHLine(uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour);
+void LCD_drawLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1, lcd_colour_t color );
 void LCD_drawTestFigure(void);
 
 #endif /* _LS012B7DD06_H_ */

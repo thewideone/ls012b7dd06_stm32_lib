@@ -9,6 +9,13 @@
 #include <stdio.h>	// for sprintf()
 #include "main.h"	// for uart_msg_buf
 
+#include <stdlib.h> // for abs()
+
+// Macro for swapping two int16_t variables,
+// used in LCD_drawLine()
+// Why do {} while(0)? See https://dev.to/pauljlucas/cc-preprocessor-macros-fh5
+#define SWAP_INT16(a, b) do {int16_t t = a; a = b; b = t;} while(0)
+
 lcd_ctx_t lcd_ctx[LCD_INSTANCES_CNT] = { 0 };
 uint8_t lcd_active_instance_no = 0;
 
@@ -509,6 +516,8 @@ HAL_StatusTypeDef LCD_displayFrame(void) {
 		Error_Handler();
 	}
 	// lcd_ctx[lcd_active_instance_no].hadv_tim is started in lcd_ctx[lcd_active_instance_no].hdelay_tim's interrupt
+
+	return HAL_OK;
 }
 
 void LCD_cls(void) {
@@ -673,6 +682,48 @@ void LCD_drawSquare(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 void LCD_drawHLine(uint16_t x0, uint16_t x1, uint16_t y, lcd_colour_t colour) {
 	for (uint16_t x = x0; x < x1; x++)
 		LCD_setPixel(x, y, colour);
+}
+
+// Bresenham's algorithm
+void LCD_drawLine( int16_t x0, int16_t y0, int16_t x1, int16_t y1, lcd_colour_t color ){
+
+	int steep = abs( y1 - y0 ) > abs( x1 - x0 );
+
+	if (steep) {
+		SWAP_INT16( x0, y0 );
+		SWAP_INT16( x1, y1 );
+	}
+
+	if ( x0 > x1 ) {
+		SWAP_INT16( x0, x1 );
+		SWAP_INT16( y0, y1 );
+	}
+
+	int dx, dy;
+	dx = x1 - x0;
+	dy = abs( y1 - y0 );
+
+	int err = dx / 2;
+	int ystep;
+
+	if ( y0 < y1 )
+		ystep = 1;
+	else
+		ystep = -1;
+
+	for ( ; x0 <= x1; x0++ ) {
+		if(steep)
+			LCD_setPixel( y0, x0, color );
+		else
+			LCD_setPixel( x0, y0, color );
+
+		err -= dy;
+
+		if ( err < 0 ) {
+			y0 += ystep;
+			err += dx;
+		}
+	}
 }
 
 void LCD_drawTestFigure(void) {
